@@ -3,6 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#define SIZE 128
+
 
 // Function to display a message
 void writeMessage(const char *message) {
@@ -58,7 +60,7 @@ void execute(char *message){
 }
 
 int main() {
-    const size_t bufferSize = 128;  // Adjust of the size of the input command as needed
+    const size_t bufferSize = SIZE;  // Adjust of the size of the input command as needed
     char message[bufferSize];
 
     // Display the welcome message at the beginning

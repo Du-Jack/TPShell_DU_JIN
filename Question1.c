@@ -1,12 +1,16 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#define SIZE 128
 
-#define BUFSIZE 128
+// Function to display a message
+void writeMessage(const char *message) {
+    // Write the message to the standard output
+    write(STDOUT_FILENO, message, strlen(message));
+}
 
 int main(){
-    char *message = "Welcome to ENSEA Tiny Shell. \nType 'exit' to quit. \nenseash % \n";
-    write(1, message, strlen(message));
-    // fd : STDOUT_FILENO == 1, STDIN_FILENO == 0, STRERR_FILENO ==2
+    writeMessage("Welcome to ENSEA Tiny Shell.\nType 'exit' to quit.\n");
+    writeMessage("enseash % \n");
     }
 

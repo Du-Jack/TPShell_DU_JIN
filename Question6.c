@@ -13,6 +13,32 @@ void writeMessage(const char *message) {
     write(STDOUT_FILENO, message, strlen(message));
 }
 
+// Function to display status
+void convertMessage(const char *output, int val, float elapsedTime) {
+    // Write the message to the standard output
+    char message[SIZE]; 
+    snprintf(message, sizeof(message), "enseash [%s:%d|%fms] %% \n", output, val, elapsedTime);
+    writeMessage(message);
+}
+
+// Display the return code/signal of the previous command and the shell prompt
+void displayPreviousCommand(float elapsedTime){
+    int status;
+
+    wait(&status);
+
+    if (WIFEXITED(status)){
+        convertMessage("exit", WEXITSTATUS(status), elapsedTime);
+    }
+
+    else if (WIFSIGNALED(status)){
+        convertMessage("sign", WTERMSIG(status), elapsedTime);
+    }
+
+    writeMessage("enseash % ");
+}
+
+
 // Function to read user input
 ssize_t readMessage(char *message, size_t size) {
     ssize_t readBytes = read(STDIN_FILENO, message, size - 1); // Read user input
@@ -30,6 +56,8 @@ ssize_t readMessage(char *message, size_t size) {
     return readBytes;
 }
 
+
+// Execute function
 double execute(char *message){
     struct timespec start, end;
     float elapsedTime = 0;
@@ -67,7 +95,7 @@ double execute(char *message){
         }
         args[argc] = NULL;
         execvp(args[0], args);
-        
+
         // Error message displayed if not executed
         writeMessage("Error: execute\n"); 
         exit(EXIT_FAILURE);     
@@ -85,32 +113,7 @@ double execute(char *message){
     return elapsedTime;
 }
 
-
-// Function to display status
-void convertMessage(const char *output, int val, float elapsedTime) {
-    // Write the message to the standard output
-    char message[SIZE]; 
-    snprintf(message, sizeof(message), "enseash [%s:%d|%fms] %% \n", output, val, elapsedTime);
-    writeMessage(message);
-}
-
-void displayPreviousCommand(float elapsedTime){
-    int status;
-
-    wait(&status);
-
-    if (WIFEXITED(status)){
-        convertMessage("exit", WEXITSTATUS(status), elapsedTime);
-    }
-
-    else if (WIFSIGNALED(status)){
-        convertMessage("sign", WTERMSIG(status), elapsedTime);
-    }
-
-    writeMessage("enseash % ");
-}
-
-
+// Manage the exit
 void exitFunction(char *message, ssize_t readBytes){
     if(strncmp(message,"exit",4)==0 || readBytes == 0){ // 'exit' or <ctrl>+d
         writeMessage("Bye bye...\n");
@@ -118,8 +121,10 @@ void exitFunction(char *message, ssize_t readBytes){
     } 
 }
 
+
+
 int main() {
-    const size_t bufferSize = 128;  // Adjust of the size of the input command as needed
+    const size_t bufferSize = SIZE;  // Adjust of the size of the input command as needed
     char message[bufferSize];
     float elapsedTime = 0;
     
@@ -141,5 +146,4 @@ int main() {
     }
     return EXIT_SUCCESS;
 }
-
 
