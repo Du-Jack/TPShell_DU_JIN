@@ -58,61 +58,66 @@ ssize_t readMessage(char *message, size_t size) {
 }
 
 // Function to manage complex command with arguments 
-void tokenize(char *message, char *args[], int argc){
+void tokenize(char *message, char *args[], size_t *argc) {
     // break down into tokens (~word/argument)
     char *token = strtok(message, " ");
-    while (token != NULL && argc < SIZE - 1) {
-        args[argc++] = token;
+    while (token != NULL) {
+        args[(*argc)++] = token;
         token = strtok(NULL, " ");
     }
-    args[argc] = NULL;   
+    args[*argc] = NULL;
 }
 
 // Function to manage redirections
 void redirection(char *args[], int argc){
+
+    char *input = NULL;
+    char *output = NULL;
+
+    // Check for input and output redirection
     for (size_t i = 0; i < argc; i++) {
+        
         // Input redirection
         if (strcmp(args[i], "<") == 0) {
-            args[i] = NULL; // remove '<' from the argument list
-            
-            // Open the file for reading
-            int fd = open(args[i + 1], O_RDONLY);
+            input = args[i + 1];
+            args[i] = NULL; 
+
+            // Open the input file for reading
+            int fd = open(input, O_RDONLY);
             if (fd == -1) {
-                perror("Error: redirection (Input)\nopen");
+                perror("Error: handleRedirection (Input)\nopen");
                 exit(EXIT_FAILURE);
             }
 
             // Redirect standard input to the file
             if (dup2(fd, STDIN_FILENO) == -1) {
-                perror("Error: redirection (Input)\ndup2");
+                perror("Error: handleRedirection (Input)\ndup2");
                 close(fd);
                 exit(EXIT_FAILURE);
             }
             
-            // Close the file descriptor
             close(fd);
         }
         
         // Output redirection
         else if (strcmp(args[i], ">") == 0) {
-            args[i] = NULL; // remove '>' from the argument list
-            
+            output = args[i + 1];
+            args[i] = NULL; 
+
             // Open the output file for writing
-            int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                // 0644 ==  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
+            int fd = open(output, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
             if (fd == -1) {
-                perror("Error: redirection (Output)\nopen");
+                perror("Error: handleRedirection (Output)\nopen");
                 exit(EXIT_FAILURE);
             }
 
             // Redirect standard output to the file
             if (dup2(fd, STDOUT_FILENO) == -1) {
-                perror("Error: redirection (Output)\ndup2");
+                perror("Error: handleRedirection (Output)\ndup2");
                 close(fd);
                 exit(EXIT_FAILURE);
             }
             
-            // Close the file descriptor
             close(fd);
         }
     }
@@ -148,9 +153,9 @@ double execute(char *message){
 
     else {
         char *args[SIZE];
-        int argc = 0;
+        size_t argc = 0;
 
-        tokenize(message, args, argc);
+        tokenize(message, args, &argc);
         redirection(args, argc);
         execvp(args[0], args);
 
